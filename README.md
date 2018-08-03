@@ -5,6 +5,12 @@ Nishimura is a Karel package manager. The project is named after *Makoto Nishimu
 
 Nishimura can interact with different other projects. Therefore the projects will search for different environment setting.
 
+Nishimura uses a Installation repository:
+
+```bash
+export NISHIMURA_HOME=/usr/local/lib/karel/
+```
+
 ### Gakutensoku
 If the user want to use a global karel compiler, because he uses LINUX or Mac, then the package can send to the **Gakutensoku** server. To set the **Gakutensoku** server connection use
 
@@ -14,10 +20,10 @@ export GAKUTENSOKU_HOME=127.0.0.1:1234
 All information on **Gakutensoku** will be available in the projekt description.
 
 ### Makoto
-Makoto is a project to make a Karel package configuration description. This file will contain all information of the project. The systems runs on the **KPC** shorting. All packages for Karel can be stored into a global dictionary. The path has to be set, if a user want to use dependencies or install the local libray.
+Makoto is a project to make a Karel package configuration description. This file will contain all information of the project. All packages informationes files for Karel are stored into a global dictionary. The path has to be set, if a user want to use dependencies or install the local libray.
 
 ```bash
-export KPC_HOME=/usr/local/lib/karel/
+export KPC_HOME=/usr/local/lib/karel/kpc
 ```
 
 The KPC-System only runs on **.karel** files, the project files.
@@ -53,6 +59,7 @@ The project utilizes different methods to provide an easy work with Karel projec
 |init| build a new project using a project skell|
 |deploy| deploy the package to the roboter|
 |compile| compile the current package and copy the result into the bin/ folder.|
+|delete| delete a package from the local folder|
 
 ### init
 
@@ -99,9 +106,9 @@ If no name and version is given, then the current project is used to install. To
 1. build the package
 2. send the package to the compiler or use the local installation
 3. If the compile process was successfull, then install the package, otherwise break the installation process and give back the error message
-4. install the package to a local diectory (./vendor) or global in **Makoto** global folder
+4. install the package to a local diectory (./vendor) or global in *NISHIMURA_HOME* folder
 
-If a name is given for this project, then in the first step is the local **Makoto** folder checked and if the project is not available on the local computer, then the package server **Hoffmann** is utilized.
+If a name is given for this project, then in the first step is the local *NISHIMURA_HOME* folder checked and if the project is not available on the local computer, then the package server **Hoffmann** is utilized.
 If a version is set, then the system trys to install the requested version. Otherwise the system allways install the latest version.
 
 ### push
@@ -115,7 +122,8 @@ This function only starts if **Hoffmann** as package server is available and onl
 ```bash
 Nishimura pull name<@version>
 ```
-This command is an alias to download a requested package. If the package is available, then the package is installed into the **Makoto** global server.
+
+This command is an alias to download a requested package. If the package is available, then the package is installed into the *NISHIMURA_HOME* global folder.
 
 ### deploy
 ```bash
@@ -131,3 +139,11 @@ Nishimura compile <--gakutensoku> <--test>
 ```
 
 This command starts the compile process. Because I use mostly Linux, the **Gakutensoku** server is mandatory. This method handed the package to the **KTrans Wrapper** project and builds the package. The test option will delete the bin folder after a successfull build.
+
+### delete
+
+```bash
+Nishimura delete name<@version>
+```
+
+delete the kpc file and the corresponding package in the *NISHIMURA_HOME*
