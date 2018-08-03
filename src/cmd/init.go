@@ -105,7 +105,7 @@ func ( this *NishimuraProject ) to_KPC() (*kpc.KPC){
 	kpc.Name = this.name
 	kpc.Version = this.version
 	kpc.Description = this.description
-	kpc.libs[1]     = this.mainfile
+	kpc.libs     = this.mainfile
 
 	mainfile    string
 	parser_ver  string
