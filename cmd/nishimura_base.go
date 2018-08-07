@@ -69,7 +69,7 @@ func initConfig() {
 	}
 
 	if len(rfg.RootDir) > 0 {
-		rfg.init(env.GetEnv("NISHIMURA_PATH"))
+		rfg.init(env.GetEnv("NISHIMURA_HOME"))
 	}
 	rfg.save(confFile)
 

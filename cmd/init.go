@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	kpc "github.com/afeldman/Makoto/kpc"
 	license "github.com/afeldman/Nishimura/licenses"
 	nishi "github.com/afeldman/Nishimura/nishimura"
 	"github.com/afeldman/go-util/string"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -82,6 +82,7 @@ func InitProject() {
 
 			dir_path := createProjectDirectory(data.Project_Name)
 			makeLicense(kpc_, data, dir_path)
+			copy_git(dir_path)
 
 			break
 		} else {
@@ -89,6 +90,21 @@ func InitProject() {
 			fmt.Println("you decided to do not start a new project")
 			fmt.Println("")
 		}
+	}
+}
+
+func copy_git(path string) {
+	nishimura_home_template := filepath.Join(os.Getenv("NISHIMURA_HOME"), "templates")
+
+	err := fcopy(filepath.Join(nishimura_home_template, "_gitignore"),
+		filepath.Join(path, ".gitignore"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = fcopy(filepath.Join(nishimura_home_template, "_gitattribute"),
+		filepath.Join(path, ".gitattribute"))
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -157,4 +173,34 @@ func isEmpty(path string) (bool, error) {
 		return true, nil
 	}
 	return false, err // Either not empty or error, suits both cases
+}
+
+func fcopy(src, dest string) {
+	// Open original file
+	originalFile, err := os.Open(src)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer originalFile.Close()
+
+	// Create new file
+	newFile, err := os.Create(dest)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer newFile.Close()
+
+	// Copy the bytes to destination from source
+	bytesWritten, err := io.Copy(newFile, originalFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Copied %d bytes.", bytesWritten)
+
+	// Commit the file contents
+	// Flushes memory to disk
+	err = newFile.Sync()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
