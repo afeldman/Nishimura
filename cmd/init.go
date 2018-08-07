@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kpc "github.com/afeldman/Makoto/"
+	kpc "github.com/afeldman/Makoto/kpc/"
 )
 
 var init = &cobra.Command{
@@ -72,7 +72,6 @@ func InitProject() {
 		"MIT"
 	}
 
-
 	project_data.name        := consol_input("package name (" + getcurrentpathname() + "):")
 	project_data.version     := consol_input("package version (0.1.0):")
 	project_data.description := console_input("package description:")
@@ -84,10 +83,10 @@ func InitProject() {
 	project_data.authors     := console_input("author:")
 	project_data.license     := console_input("license (MIT):")
 
-	kcp := build_KPC_from_data(project_data)
+	kpc := project_data.to_KPC(project_data)
 	// show kpc
 
-	ok             := console_input("OK (yes)?:")
+	ok  := console_input("OK (yes)?:")
 
 	//if yes build project
 	if (strings.HasPrefix(strings.ToLower(strings.TrimSpace(ok)),'y')){
@@ -100,12 +99,11 @@ func InitProject() {
 
 func ( this *NishimuraProject ) to_KPC() (*kpc.KPC){
 
-	kpc := kpc.KPC{};
+	kpc := kpc.KPC_Init(this.name);
 
-	kpc.Name = this.name
-	kpc.Version = this.version
+	kpc.Version     = this.version
 	kpc.Description = this.description
-	kpc.libs     = this.mainfile
+	kpc.main        = this.mainfile
 
 	mainfile    string
 	parser_ver  string
