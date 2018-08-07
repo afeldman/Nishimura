@@ -1,33 +1,33 @@
 package license
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-
+	"log"
 	"strings"
+	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/vigneshuvi/GoDateFormat"
 )
 
-func fetchLicense(key string) (string, error) {
+func GetLicense(lice, email, author, project string) string {
 
-	keq = string.ToLower(key)
-
-	// Create default client
-	client := github.NewClient(nil)
-
-	// Fetch a LICENSE from Github API
-	Debugf("Fetch license from GitHub API by key: %s", key)
-	license, res, err := client.Licenses.Get(context.Background(), key)
+	lice, err := FetchLicense(lice)
 	if err != nil {
-		return "", err
+		log.Fatal(err)
+		return ""
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("invalid status code from GitHub\n %s\n", res.String())
-	}
-	Debugf("Fetched license name: %s", *license.Name)
+	//now := time.Now().Year()
+	today := GetToday(GoDateFormat.ConvertFormat("YYYY"))
+	lice = strings.Replace(lice, "[year]", today, 1)
+	lice = strings.Replace(lice, "[fullname]", author, 1)
+	lice = strings.Replace(lice, "[email]", email, 1)
+	lice = strings.Replace(lice, "[project]", project, 1)
 
-	return *license.Body, nil
+	return lice
+}
+
+func GetToday(format string) (todayString string) {
+	today := time.Now()
+	todayString = today.Format(format)
+	return
 }

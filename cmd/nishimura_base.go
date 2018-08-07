@@ -35,7 +35,7 @@ func init() {
 	Nishimura.PersistentFlags().StringVar(&confFile, "config", "", "config file (default $HOME/.config/nishimura/nishimura.yaml)")
 
 	Nishimura.AddCommand(version)
-	Nishimura.AddCommand(init)
+	Nishimura.AddCommand(build)
 }
 
 func Execute() {

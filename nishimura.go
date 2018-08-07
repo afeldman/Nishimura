@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/afeldman/Nishimura/src/cmd"
+	"github.com/afeldman/Nishimura/cmd"
 )
 
 func main() {

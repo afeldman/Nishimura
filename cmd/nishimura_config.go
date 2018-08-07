@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+
+	"gopkg.in/yaml.v2"
 )
 
 type NishimuraConfig struct {
@@ -11,7 +12,7 @@ type NishimuraConfig struct {
 	Version string   `yaml:"nishimura_version"`
 }
 
-var rfg RossumConfig
+var rfg NishimuraConfig
 
 func (r *NishimuraConfig) init(nishimurapath []string) {
 	r.RootDir = nishimurapath

@@ -1,132 +1,99 @@
 package cmd
 
 import (
-	"fmt"
 	"bufio"
-	"strings"
-	"path/filepath"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	kpc "github.com/afeldman/Makoto/kpc/"
+	kpc "github.com/afeldman/Makoto/kpc"
+	license "github.com/afeldman/Nishimura/licenses"
+	nishi "github.com/afeldman/Nishimura/nishimura"
+	"github.com/afeldman/go-util/string"
 )
 
-var init = &cobra.Command{
-	Use:   "init",
-	Short: "print initilize a Karel project",
-	Long:  `
-Initilize the karel project.
+var (
+	build = &cobra.Command{
+		Use:   "build",
+		Short: "print initilize a Karel project",
+		Long: `
+Initilize a karel project.
 AUTHOR:
 	Anton Feldmann <anton.feldmann@gmail.com>
 `,
-	Run:   func(cmd *cobra.Command, args []string){
-		InitProject();
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			InitProject()
+		},
+	}
+)
 
-func getcurrentpathname() string{
-	dir, err = os.Getwd()
+func getcurrentpathname() string {
+	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
 	return dir
 }
 
-func consol_input(consoletext string) (string){
-	reader:= bufio.newReader(os.Stdin)
+func console_input(consoletext, def_str string) string {
+	in := bufio.NewReader(os.Stdin)
 	fmt.Print(consoletext)
-	text, err := reader.ReadString('\n')
-	if ( err != nil) {
+	text, err := in.ReadString('\n')
+	if err != nil {
 		log.Fatal(err)
 	}
-
-	return text;
-}
-
-type NishimuraProject struct{
-	name        string
-	version     string
-	description string
-	mainfile    string
-	parser_ver  string
-	repo_type   string
-	repo_add    string
-	keywords    string
-	authors     string
-	license     string
-}
-
-func ask(project_data *NishimuraProject) bool{
-	project_data.name        := consol_input("package name (" + getcurrentpathname() + "):")
-	project_data.version     := consol_input("package version (0.1.0):")
-	project_data.description := console_input("package description:")
-	project_data.mainfile    := console_input("main file (" + name + ".kl):")
-	project_data.parser_ver  := console_input("paser version (v9.10):")
-	project_data.repo_type   := console_input("repository type (git):")
-	project_data.repo_add    := console_input("repository address:")
-	project_data.keywords    := console_input("package keywords:")
-	project_data.authors     := console_input("author:")
-	project_data.license     := console_input("license (MIT):")
-
-
-	kpc := project_data.to_KPC(project_data)
-
-	fmt.Println(string(kpc.ToYAML()))
-
-	ok  := console_input("OK (yes)?:")
-	if (strings.HasPrefix(strings.ToLower(strings.TrimSpace(ok)),'y')){
-		return true
-	}else{
-		return false
+	text = strings.TrimSuffix(text, "\n")
+	if str_util.StringEmpty(text) {
+		text = def_str
 	}
+	return text
 }
 
 func InitProject() {
 
-	project_data := NishimuraProject{
-		getcurrentpathname(),
-		"0.1.0",
-		"",
-		getcurrentpathname(),
-		"v9.10",
-		"git",
-		"",
-		"",
-		os.GetEnv('USER'),
-		"MIT"
-	}
+	var data = &nishi.Nishimura{}
 
-	for{
-		if ask(project_data) {
-			// make file for kpc and compiler
+	kpc_ := kpc.KPC_Init(data.Project_Name)
+
+	for {
+		project_name := filepath.Base(getcurrentpathname())
+		data.Project_Name = console_input("package name ("+project_name+"):", project_name)
+		data.Version = console_input("package version (0.1.0):", "0.1.0")
+		data.Description = console_input("package description:", "")
+		data.Mainfile = console_input("main file ("+data.Project_Name+".kl):", data.Project_Name+".kl")
+		data.Parser_ver = console_input("paser version (v9.10):", "v9.10")
+		data.Repo_type = console_input("repository type (git):", "git")
+		data.Repo_add = console_input("repository address:", "")
+		data.Keywords = console_input("package keywords:", "")
+		data.Author = console_input("author:", os.Getenv("USER"))
+		data.Email = console_input("author's email:", "")
+		data.License = console_input("license (MIT):", "MIT")
+
+		kpc_ = data.To_KPC()
+		fmt.Println("\n", string(kpc_.ToYAML()))
+
+		ok := console_input("OK (yes)?:", "no")
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(ok)), "y") {
+
+			log.Println(data.License)
+			authors := kpc_.Authors
+			lic := license.GetLicense(data.License,
+				*((authors[0]).GetEmail()),
+				*((authors[0]).GetName()),
+				data.Project_Name)
+			if !str_util.StringEmpty(lic) {
+				log.Println(lic)
+			} else {
+				log.Println("tja keine License")
+			}
+
 			break
-		}else{
+		} else {
 			fmt.Println("you decided to do not start a new project")
 		}
 	}
-
-}
-
-func ( this *NishimuraProject ) to_KPC() (*kpc.KPC){
-
-	kpc := kpc.KPC_Init(this.name);
-
-	kpc.GetVersion(this.version)
-	kpc.SetDescription(this.description)
-	kpc.main        = this.mainfile
-
-	repo := kpc.Repo_Init();
-	repo.SetType(this.repo_type)
-	repo.SetUTL(this.repo_add)
-	kpc.AddRepo(repo)
-	kpc.Main = mainfile
-
-	kpc.Authors := strings.Split(this.authors, ";")
-
-	parser_ver  string
-	keywords    string
-	license     string
-
-	return &kpc;
 }
