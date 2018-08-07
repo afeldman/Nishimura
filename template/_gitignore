@@ -1,0 +1,22 @@
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.waf*
+*waf3*
+*.lock*
+*.userprefs
+*~
+*.~
+#*
+*#~
+*#
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]uild/
+[Bb]in/
+[Vv]endor/
+[Dd]oc/

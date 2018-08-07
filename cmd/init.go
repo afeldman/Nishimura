@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -79,21 +80,81 @@ func InitProject() {
 		ok := console_input("OK (yes)?:", "no")
 		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(ok)), "y") {
 
-			log.Println(data.License)
-			authors := kpc_.Authors
-			lic := license.GetLicense(data.License,
-				*((authors[0]).GetEmail()),
-				*((authors[0]).GetName()),
-				data.Project_Name)
-			if !str_util.StringEmpty(lic) {
-				log.Println(lic)
-			} else {
-				log.Println("tja keine License")
-			}
+			dir_path := createProjectDirectory(data.Project_Name)
+			makeLicense(kpc_, data, dir_path)
 
 			break
 		} else {
+			fmt.Println("")
 			fmt.Println("you decided to do not start a new project")
+			fmt.Println("")
 		}
 	}
+}
+
+func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) {
+	log.Println(path)
+
+	authors := kpc_.Authors
+	lic := license.GetLicense(data.License,
+		*((authors[0]).GetEmail()),
+		*((authors[0]).GetName()),
+		data.Project_Name)
+
+	file, err := os.Create(filepath.Join(path, "LICENSE"))
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	if !str_util.StringEmpty(lic) {
+		file.WriteString(lic)
+	} else {
+		file.WriteString("")
+	}
+}
+
+func createProjectDirectory(project_name string) string {
+	path := getcurrentpathname()
+	base_path := ""
+
+	if filepath.Base(path) == project_name {
+		isempty, err := isEmpty(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !isempty {
+			base_path = project_name
+		}
+	} else {
+		base_path = project_name
+	}
+
+	directoryPath := filepath.Join(path, base_path)
+
+	log.Println(directoryPath)
+
+	//choose your permissions well
+	pathErr := os.MkdirAll(directoryPath, 0764)
+
+	//check if you need to panic, fallback or report
+	if pathErr != nil {
+		fmt.Println(pathErr)
+	}
+
+	return directoryPath
+}
+
+func isEmpty(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
 }

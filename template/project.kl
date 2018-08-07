@@ -1,0 +1,17 @@
+-- @file {{.FileName}}
+--
+-- @brief {{.SmallDesc}}
+--
+-- {{.Desc}}
+--
+-- @copyright {{.Author}}
+--
+-- @author {{.Author}}
+--
+-- @date {{.today}}
+-- @license {{.License}}
+--
+PROGRAM {{.Projektname}}
+
+BEGIN
+END {{.Projektname}}
