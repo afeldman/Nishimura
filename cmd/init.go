@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,6 +12,8 @@ import (
 	license "github.com/afeldman/Nishimura/licenses"
 	nishi "github.com/afeldman/Nishimura/nishimura"
 	"github.com/afeldman/go-util/string"
+	"github.com/afeldman/go-util/fs"
+	//"github.com/afeldman/go-util/file"
 
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ AUTHOR:
 	Anton Feldmann <anton.feldmann@gmail.com>
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			InitProject()
+			InitPackage()
 		},
 	}
 )
@@ -54,7 +55,7 @@ func console_input(consoletext, def_str string) string {
 	return text
 }
 
-func InitProject() {
+func InitPackage() {
 
 	var data = &nishi.Nishimura{}
 
@@ -82,7 +83,7 @@ func InitProject() {
 
 			dir_path := createProjectDirectory(data.Project_Name)
 			makeLicense(kpc_, data, dir_path)
-			copy_git(dir_path)
+//			copy_git(dir_path)
 
 			break
 		} else {
@@ -93,20 +94,20 @@ func InitProject() {
 	}
 }
 
-func copy_git(path string) {
-	nishimura_home_template := filepath.Join(os.Getenv("NISHIMURA_HOME"), "templates")
+//func copy_git(path string) {
+//	nishimura_home_template := filepath.Join(rfg.RootDir, "templates")
 
-	err := fcopy(filepath.Join(nishimura_home_template, "_gitignore"),
-		filepath.Join(path, ".gitignore"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = fcopy(filepath.Join(nishimura_home_template, "_gitattribute"),
-		filepath.Join(path, ".gitattribute"))
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+//	err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "_gitignore"),
+//		filepath.Join(path, ".gitignore"))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	err = fileinfo.Fcopy(filepath.Join(nishimura_home_template, "_gitattribute"),
+//		filepath.Join(path, ".gitattribute"))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//}
 
 func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) {
 	log.Println(path)
@@ -135,7 +136,7 @@ func createProjectDirectory(project_name string) string {
 	base_path := ""
 
 	if filepath.Base(path) == project_name {
-		isempty, err := isEmpty(path)
+		isempty, err := filesystem.IsEmpty(path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -148,59 +149,10 @@ func createProjectDirectory(project_name string) string {
 
 	directoryPath := filepath.Join(path, base_path)
 
-	log.Println(directoryPath)
-
-	//choose your permissions well
-	pathErr := os.MkdirAll(directoryPath, 0764)
-
-	//check if you need to panic, fallback or report
+	pathErr := filesystem.MkDir(directoryPath, 0764)
 	if pathErr != nil {
 		fmt.Println(pathErr)
 	}
 
 	return directoryPath
-}
-
-func isEmpty(path string) (bool, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1) // Or f.Readdir(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err // Either not empty or error, suits both cases
-}
-
-func fcopy(src, dest string) {
-	// Open original file
-	originalFile, err := os.Open(src)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer originalFile.Close()
-
-	// Create new file
-	newFile, err := os.Create(dest)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer newFile.Close()
-
-	// Copy the bytes to destination from source
-	bytesWritten, err := io.Copy(newFile, originalFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Copied %d bytes.", bytesWritten)
-
-	// Commit the file contents
-	// Flushes memory to disk
-	err = newFile.Sync()
-	if err != nil {
-		log.Fatal(err)
-	}
 }

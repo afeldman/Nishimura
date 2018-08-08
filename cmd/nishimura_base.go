@@ -2,13 +2,7 @@ package cmd
 
 import (
 	"log"
-	"path"
-
-	homedir "github.com/atrox/homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/afeldman/go-util/env"
 )
 
 var (
@@ -39,38 +33,16 @@ func init() {
 }
 
 func Execute() {
-	Nishimura.Execute()
+	if err := Nishimura.Execute(); err != nil {
+		log.Fatal(err)
+	}
+
 }
 
-func initConfig() {
-	if confFile != "" {
-		viper.SetConfigFile(confFile)
-	} else {
-
-		home, err := homedir.Dir()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		confFile = path.Join(home, ".config", "nishimura", "nishimura.yaml")
-
-		viper.AddConfigPath(path.Join(home, ".config", "nishimura"))
-		viper.SetConfigName("nishimura")
+func initConfig(){
+	ncft, err := loadConfig(confFile)
+	log.Println(ncft.RootDir)
+	if err != nil {
+		ncft.build_file()
 	}
-
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		log.Println(err)
-	} else {
-		if err := viper.Unmarshal(&rfg); err != nil {
-			log.Fatal("unable to decode into the Nishimura configuration structure, %v", err)
-		}
-	}
-
-	if len(rfg.RootDir) > 0 {
-		rfg.init(env.GetEnv("NISHIMURA_HOME"))
-	}
-	rfg.save(confFile)
-
 }
