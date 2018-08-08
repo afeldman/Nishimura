@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"io/ioutil"
 
 	kpc "github.com/afeldman/Makoto/kpc"
 	license "github.com/afeldman/Nishimura/licenses"
@@ -92,6 +93,9 @@ func InitPackage() {
 				}
 			}
 
+			if err := make_kpc(kpc_,data.Project_Name,dir_path); err != nil {
+				log.Fatal(err)
+			}
 
 			break
 		} else {
@@ -100,6 +104,31 @@ func InitPackage() {
 			fmt.Println("")
 		}
 	}
+}
+
+func make_kpc(kpc_ *kpc.KPC, target, path string) error{
+	tmpfile, err := ioutil.TempFile("", "nishimura-")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	if _, err := tmpfile.Write(string(kpc_.ToJSON())); err != nil {
+		return err
+	}
+	tmpfile.Sync()
+
+	file_abs := filepath.Join(path, target+".json")
+	//dir, file := filepath.Split(file_abs)
+
+	if err := fileinfo.Fcopy(tmpfile.Name(), file_abs); err != nil {
+		return err
+	}
+	if err := tmpfile.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func copy_git(path string) error {
