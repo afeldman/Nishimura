@@ -113,13 +113,12 @@ func make_kpc(kpc_ *kpc.KPC, target, path string) error{
 	}
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	if _, err := tmpfile.Write(string(kpc_.ToJSON())); err != nil {
+	if _, err := tmpfile.WriteString(string(kpc_.ToJSON())); err != nil {
 		return err
 	}
 	tmpfile.Sync()
 
 	file_abs := filepath.Join(path, target+".json")
-	//dir, file := filepath.Split(file_abs)
 
 	if err := fileinfo.Fcopy(tmpfile.Name(), file_abs); err != nil {
 		return err
