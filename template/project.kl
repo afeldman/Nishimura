@@ -4,14 +4,14 @@
 --
 -- {{.Desc}}
 --
--- @copyright {{.Author}}
+-- @copyright {{.Copyright}}
 --
 -- @author {{.Author}}
 --
--- @date {{.today}}
+-- @date {{.Today}}
 -- @license {{.License}}
 --
-PROGRAM {{.Projektname}}
+PROGRAM {{.Projectname}}
 
 BEGIN
-END {{.Projektname}}
+END {{.Projectname}}

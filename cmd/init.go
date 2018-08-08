@@ -19,6 +19,9 @@ import (
 	"github.com/afeldman/go-util/file"
 
 	"github.com/spf13/cobra"
+	"github.com/vigneshuvi/GoDateFormat"
+	"github.com/afeldman/go-util/time"
+	"html/template"
 )
 
 var (
@@ -103,7 +106,11 @@ func InitPackage() {
 				log.Fatal(err)
 			}
 
-			if err := make_compiler_conf(data,dir_path); err != nil {
+			if err := make_compiler_conf(data, dir_path); err != nil {
+				log.Fatal(err)
+			}
+
+			if err := build_start_file(data, dir_path); err != nil {
 				log.Fatal(err)
 			}
 
@@ -154,7 +161,7 @@ func make_kpc(kpc_ *kpc.KPC, target, path string) error{
 	}
 	tmpfile.Sync()
 
-	if err := fileinfo.Fcopy(tmpfile.Name(), filepath.Join(path, target+".json")); err != nil {
+	if err := fileinfo.Fcopy(tmpfile.Name(), filepath.Join(path, target+".kpc")); err != nil {
 		return err
 	}
 	if err := tmpfile.Close(); err != nil {
@@ -227,4 +234,47 @@ func createProjectDirectory(project_name string) string {
 	}
 
 	return directoryPath
+}
+
+func build_start_file(data *nishi.Nishimura, path string) error{
+
+	type page_data struct {
+		FileName    string
+		SmallDesc   string
+		Desc        string
+		Copyright   string
+		Author      string
+		Today       string
+		License     string
+		Projectname string
+	}
+
+	today := time_util.GetToday(GoDateFormat.ConvertFormat("dd-MMM-yyyy"))
+
+	page_ := page_data{
+		FileName: data.Mainfile,
+		SmallDesc: data.Description,
+		Desc: data.Description,
+		Copyright: data.License,
+		Author: data.Author,
+		Today: today,
+		License: data.License,
+		Projectname: data.Project_Name,
+	}
+
+	nishimura_home_template := filepath.Join(ncft.RootDir, "template", "project.kl")
+	tmpl, err := template.ParseFiles(nishimura_home_template)
+	if err != nil {
+		return err
+	}
+
+	file, err_ := os.Create(filepath.Join(path, data.Mainfile))
+	if err_ != nil {
+		return err_
+	}
+	defer file.Close()
+
+	tmpl.Execute(file, page_)
+
+	return nil
 }
