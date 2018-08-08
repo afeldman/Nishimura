@@ -14,8 +14,9 @@ import (
 )
 
 type NishimuraConfig struct {
-	RootDir string `yaml:"nishimura_root"`
-	Version string   `yaml:"nishimura_version"`
+	RootDir string `yaml:"path"`
+	ConfFile string  `yaml:"file"`
+	Version string   `yaml:"version"`
 }
 
 var ncft NishimuraConfig
@@ -33,7 +34,13 @@ func DefaultConfPath() string {
 }
 
 func (r *NishimuraConfig) initNishimura(nishimurapath string) {
-	r.RootDir = nishimurapath
+	dir, file := filepath.Split(nishimurapath)
+	r.RootDir = dir
+	if str_util.StringEmpty(file) {
+		r.ConfFile = "nishimura.yaml"
+	}else{
+		r.ConfFile = file
+	}
 	r.Version = NISHIMURA_VERSION
 }
 
@@ -44,44 +51,19 @@ func (r *NishimuraConfig) save() error{
 		return err
 	}
 
-	if err := ioutil.WriteFile(r.RootDir, d, 0640); err != nil {
+	if err := ioutil.WriteFile(path.Join(r.RootDir,r.ConfFile), d, 0640); err != nil {
 		log.Println("can not write configuration into Nishimura configuration file")
 		return err
 	}
 	return nil
 }
 
-func loadConfig(path string) (*NishimuraConfig,error){
-
-	var config NishimuraConfig
-
-	yamlFile, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Println("can not read the file")
-		return &config, err
-	}
-	err = yaml.Unmarshal(yamlFile, config)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-		return &config, err
-	}
-
-	return &config, nil
-}
-
 func (r *NishimuraConfig)build_file() bool{
-	if !str_util.StringEmpty(r.RootDir){
-		if _, err := os.Stat(r.RootDir); os.IsNotExist(err){
-			log.Println("the requested file is not reachable")
-			//build config file
-			if err = buildconfig(r.RootDir); err != nil{
-				log.Println(err)
-				return false
-			}
-		}
-	}else {
-		r.RootDir = DefaultConfPath()
-		if err := buildconfig(r.RootDir); err != nil {
+	if _, err := os.Stat(path.Join(r.RootDir,r.ConfFile)); os.IsNotExist(err){
+		log.Println("the requested file is not reachable")
+
+		//build config file
+		if err = r.buildconfig(); err != nil{
 			log.Println(err)
 			return false
 		}
@@ -90,12 +72,11 @@ func (r *NishimuraConfig)build_file() bool{
 	return true
 }
 
-func buildconfig(path string) error{
-	if err := fs.MkDir(filepath.Dir(path),0764); err != nil {
+func (r *NishimuraConfig)buildconfig() error{
+	if err := fs.MkDir(r.RootDir,0764); err != nil {
 		return err
 	}
 
-	ncft.initNishimura(path)
 	ncft.save()
 	return nil
 }

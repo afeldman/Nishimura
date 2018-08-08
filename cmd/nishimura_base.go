@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"path"
 	"log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,13 +44,17 @@ func Execute() {
 func initConfig(){
 	ncft.initNishimura(confFile)
 
+	log.Println(ncft)
+
+	ncft.build_file()
+
 	if confFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(confFile)
 	} else {
 
-		viper.AddConfigPath(path.Dir(confFile))
-		viper.SetConfigName("nishimura.yaml")
+		viper.AddConfigPath(ncft.RootDir)
+		viper.SetConfigName(ncft.ConfFile)
 	}
 	viper.AutomaticEnv() // read in environment variables that match
 	// If a config file is found, read it in.
