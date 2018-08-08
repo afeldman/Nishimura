@@ -12,7 +12,7 @@ import (
 	kpc "github.com/afeldman/Makoto/kpc"
 	license "github.com/afeldman/Nishimura/licenses"
 	nishi "github.com/afeldman/Nishimura/nishimura"
-	gakuten "github.com/afeldman/Gakutensoku"
+	gakuten "github.com/afeldman/Gakutensoku/ktrans"
 
 	"github.com/afeldman/go-util/string"
 	"github.com/afeldman/go-util/fs"
@@ -113,7 +113,22 @@ func InitPackage() {
 }
 
 func make_compiler_conf(data *nishi.Nishimura, path string) error{
-	compiler_info := gakuten.Init()
+	compiler_info := gakuten.KtransInit()
+	compiler_info.Version = data.Version
+
+	file, err_ := os.Create(filepath.Join(path, ".ktrans.conf"))
+	if err_ != nil {
+		return err_
+	}
+	defer file.Close()
+
+	err, file_containt := compiler_info.ToJSON()
+	if err != nil {
+		return err
+	}
+
+	file.WriteString(file_containt)
+	file.Sync()
 }
 
 func make_kpc(kpc_ *kpc.KPC, target, path string) error{
