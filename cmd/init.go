@@ -13,7 +13,7 @@ import (
 	nishi "github.com/afeldman/Nishimura/nishimura"
 	"github.com/afeldman/go-util/string"
 	"github.com/afeldman/go-util/fs"
-	//"github.com/afeldman/go-util/file"
+	"github.com/afeldman/go-util/file"
 
 	"github.com/spf13/cobra"
 )
@@ -52,7 +52,7 @@ func console_input(consoletext, def_str string) string {
 	if str_util.StringEmpty(text) {
 		text = def_str
 	}
-	return text
+	return strings.TrimSpace(text)
 }
 
 func InitPackage() {
@@ -82,8 +82,16 @@ func InitPackage() {
 		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(ok)), "y") {
 
 			dir_path := createProjectDirectory(data.Project_Name)
-			makeLicense(kpc_, data, dir_path)
-//			copy_git(dir_path)
+			if err := makeLicense(kpc_, data, dir_path); err != nil {
+				log.Println(err)
+			}
+
+			if data.Repo_type == "git" {
+				if err := copy_git(dir_path); err != nil {
+					log.Println(err)
+				}
+			}
+
 
 			break
 		} else {
@@ -94,33 +102,35 @@ func InitPackage() {
 	}
 }
 
-//func copy_git(path string) {
-//	nishimura_home_template := filepath.Join(rfg.RootDir, "templates")
+func copy_git(path string) error {
+	nishimura_home_template := filepath.Join(ncft.RootDir, "template")
 
-//	err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "_gitignore"),
-//		filepath.Join(path, ".gitignore"))
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	err = fileinfo.Fcopy(filepath.Join(nishimura_home_template, "_gitattribute"),
-//		filepath.Join(path, ".gitattribute"))
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//}
+	err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitignore"),
+		filepath.Join(path, ".gitignore"))
+	if err != nil {
+		return err
+	}
+	err = fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitattribute"),
+		filepath.Join(path, ".gitattribute"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) {
-	log.Println(path)
-
+func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) error{
 	authors := kpc_.Authors
-	lic := license.GetLicense(data.License,
+	lic, err := license.GetLicense(data.License,
 		*((authors[0]).GetEmail()),
 		*((authors[0]).GetName()),
 		data.Project_Name)
-
-	file, err := os.Create(filepath.Join(path, "LICENSE"))
 	if err != nil {
-		return
+		return err
+	}
+
+	file, err_ := os.Create(filepath.Join(path, "LICENSE"))
+	if err_ != nil {
+		return err_
 	}
 	defer file.Close()
 
@@ -129,6 +139,8 @@ func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) {
 	} else {
 		file.WriteString("")
 	}
+
+	return nil
 }
 
 func createProjectDirectory(project_name string) string {
@@ -151,7 +163,7 @@ func createProjectDirectory(project_name string) string {
 
 	pathErr := filesystem.MkDir(directoryPath, 0764)
 	if pathErr != nil {
-		fmt.Println(pathErr)
+		log.Println(pathErr)
 	}
 
 	return directoryPath

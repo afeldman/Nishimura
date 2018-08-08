@@ -1,6 +1,7 @@
 package Nishimura
 
 import (
+	"strings"
 	"github.com/afeldman/Makoto/kpc"
 )
 
@@ -30,11 +31,11 @@ func (this *Nishimura) To_KPC() *kpc.KPC {
 	repo.SetType(this.Repo_type)
 	repo.SetURL(this.Repo_add)
 	kpc_.AddRepo(*repo)
-
 	kpc_.AddAuthor(kpc.Author{
 		Name:  this.Author,
 		Email: this.Email,
 	})
+	kpc_.Keywords = strings.Split(this.Keywords,",")
 
 	return kpc_
 }
