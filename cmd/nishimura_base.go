@@ -31,6 +31,7 @@ func init() {
 
 	Nishimura.AddCommand(version)
 	Nishimura.AddCommand(build)
+	Nishimura.AddCommand(pack)
 }
 
 func Execute() {
