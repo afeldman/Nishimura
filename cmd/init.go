@@ -78,8 +78,12 @@ func InitPackage() {
 		data.Email = console_input("author's email:", "")
 		data.License = console_input("license (MIT):", "MIT")
 
-		kpc_ = data.To_KPC()
-		fmt.Println("\n", string(kpc_.ToYAML()))
+		kpc_ = data.To_KPC();
+		if kpc_err, kpc_data := kpc_.ToYAML(); kpc_err != nil {
+			log.Fatal(kpc_err)
+		}else {
+			fmt.Println("\n", string(kpc_data))
+		}
 
 		ok := console_input("OK (yes)?:", "no")
 		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(ok)), "y") {
@@ -114,7 +118,8 @@ func InitPackage() {
 
 func make_compiler_conf(data *nishi.Nishimura, path string) error{
 	compiler_info := gakuten.KtransInit()
-	compiler_info.Version = data.Version
+	compiler_info.Version = data.Parser_ver
+	compiler_info.Input = data.Mainfile
 
 	file, err_ := os.Create(filepath.Join(path, ".ktrans.conf"))
 	if err_ != nil {
@@ -127,8 +132,9 @@ func make_compiler_conf(data *nishi.Nishimura, path string) error{
 		return err
 	}
 
-	file.WriteString(file_containt)
+	file.WriteString(string(file_containt))
 	file.Sync()
+	return nil
 }
 
 func make_kpc(kpc_ *kpc.KPC, target, path string) error{
@@ -138,7 +144,12 @@ func make_kpc(kpc_ *kpc.KPC, target, path string) error{
 	}
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	if _, err := tmpfile.WriteString(string(kpc_.ToJSON())); err != nil {
+	kpc_err, outputdata := kpc_.ToJSON()
+	if kpc_err != nil {
+		return kpc_err
+	}
+
+	if _, err := tmpfile.WriteString(string(outputdata)); err != nil {
 		return err
 	}
 	tmpfile.Sync()
