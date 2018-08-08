@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"fmt"
+	"path"
 	"log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -26,7 +29,7 @@ AUTHOR:
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	Nishimura.PersistentFlags().StringVar(&confFile, "config", "", "config file (default $HOME/.config/nishimura/nishimura.yaml)")
+	Nishimura.PersistentFlags().StringVar(&confFile, "config", DefaultConfPath(), "config file (default $HOME/.config/nishimura/nishimura.yaml)")
 
 	Nishimura.AddCommand(version)
 	Nishimura.AddCommand(build)
@@ -40,9 +43,19 @@ func Execute() {
 }
 
 func initConfig(){
-	ncft, err := loadConfig(confFile)
-	log.Println(ncft.RootDir)
-	if err != nil {
-		ncft.build_file()
+	ncft.initNishimura(confFile)
+
+	if confFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(confFile)
+	} else {
+
+		viper.AddConfigPath(path.Dir(confFile))
+		viper.SetConfigName("nishimura.yaml")
+	}
+	viper.AutomaticEnv() // read in environment variables that match
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 }

@@ -20,6 +20,18 @@ type NishimuraConfig struct {
 
 var ncft NishimuraConfig
 
+func DefaultConfPath() string {
+	if len(os.Getenv("NISHIMURA_HOME")) > 0 {
+		return os.Getenv("NISHIMURA_HOME")
+	} else {
+		home, err := homedir.Dir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		return path.Join(home, ".config", "nishimura", "nishimura.yaml")
+	}
+}
+
 func (r *NishimuraConfig) initNishimura(nishimurapath string) {
 	r.RootDir = nishimurapath
 	r.Version = NISHIMURA_VERSION
@@ -28,12 +40,12 @@ func (r *NishimuraConfig) initNishimura(nishimurapath string) {
 func (r *NishimuraConfig) save() error{
 	d, err := yaml.Marshal(r)
 	if err != nil {
-		log.Fatal("cannot yamalize Nishimura config")
+		log.Println("cannot yamalize Nishimura config")
 		return err
 	}
 
 	if err := ioutil.WriteFile(r.RootDir, d, 0640); err != nil {
-		log.Fatal("can not write configuration into Nishimura configuration file")
+		log.Println("can not write configuration into Nishimura configuration file")
 		return err
 	}
 	return nil
@@ -58,12 +70,6 @@ func loadConfig(path string) (*NishimuraConfig,error){
 }
 
 func (r *NishimuraConfig)build_file() bool{
-	home, err := homedir.Dir()
-	if err != nil {
-		log.Fatal(err)
-		return false
-	}
-
 	if !str_util.StringEmpty(r.RootDir){
 		if _, err := os.Stat(r.RootDir); os.IsNotExist(err){
 			log.Println("the requested file is not reachable")
@@ -73,15 +79,9 @@ func (r *NishimuraConfig)build_file() bool{
 				return false
 			}
 		}
-	}else if len(os.Getenv("NISHIMURA_HOME")) > 0 {
-		r.RootDir = os.Getenv("NISHIMURA_HOME")
-		if err = buildconfig(r.RootDir); err != nil {
-			log.Println(err)
-			return false
-		}
-	}else{
-		r.RootDir = path.Join(home, ".config", "nishimura", "nishimura.yaml")
-		if err = buildconfig(r.RootDir); err != nil {
+	}else {
+		r.RootDir = DefaultConfPath()
+		if err := buildconfig(r.RootDir); err != nil {
 			log.Println(err)
 			return false
 		}
