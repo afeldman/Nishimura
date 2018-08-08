@@ -12,6 +12,8 @@ import (
 	kpc "github.com/afeldman/Makoto/kpc"
 	license "github.com/afeldman/Nishimura/licenses"
 	nishi "github.com/afeldman/Nishimura/nishimura"
+	gakuten "github.com/afeldman/Gakutensoku"
+
 	"github.com/afeldman/go-util/string"
 	"github.com/afeldman/go-util/fs"
 	"github.com/afeldman/go-util/file"
@@ -97,6 +99,10 @@ func InitPackage() {
 				log.Fatal(err)
 			}
 
+			if err := make_compiler_conf(data,dir_path); err != nil {
+				log.Fatal(err)
+			}
+
 			break
 		} else {
 			fmt.Println("")
@@ -104,6 +110,10 @@ func InitPackage() {
 			fmt.Println("")
 		}
 	}
+}
+
+func make_compiler_conf(data *nishi.Nishimura, path string) error{
+	compiler_info := gakuten.Init()
 }
 
 func make_kpc(kpc_ *kpc.KPC, target, path string) error{
@@ -118,9 +128,7 @@ func make_kpc(kpc_ *kpc.KPC, target, path string) error{
 	}
 	tmpfile.Sync()
 
-	file_abs := filepath.Join(path, target+".json")
-
-	if err := fileinfo.Fcopy(tmpfile.Name(), file_abs); err != nil {
+	if err := fileinfo.Fcopy(tmpfile.Name(), filepath.Join(path, target+".json")); err != nil {
 		return err
 	}
 	if err := tmpfile.Close(); err != nil {
@@ -133,14 +141,12 @@ func make_kpc(kpc_ *kpc.KPC, target, path string) error{
 func copy_git(path string) error {
 	nishimura_home_template := filepath.Join(ncft.RootDir, "template")
 
-	err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitignore"),
-		filepath.Join(path, ".gitignore"))
-	if err != nil {
+	if err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitignore"),
+		filepath.Join(path, ".gitignore")); err != nil {
 		return err
 	}
-	err = fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitattribute"),
-		filepath.Join(path, ".gitattribute"))
-	if err != nil {
+	if err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitattribute"),
+		filepath.Join(path, ".gitattribute")); err != nil {
 		return err
 	}
 	return nil
