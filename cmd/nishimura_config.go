@@ -17,7 +17,7 @@ type NishimuraConfig struct {
 	RootDir string `yaml:"path"`
 	ConfFile string  `yaml:"file"`
 	Version string   `yaml:"version"`
-	TemplateDir string `yaml:"tample"`
+	TemplateDir string `yaml:"template"`
 	PluginDir string `yaml:"plugin"`
 }
 
@@ -46,7 +46,7 @@ func (r *NishimuraConfig) initNishimura(nishimurapath string) {
 	r.Version = NISHIMURA_VERSION
 
 	r.TemplateDir = filepath.Join(r.RootDir,"template")
-	r.TemplateDir = filepath.Join(r.RootDir,"plugin")
+	r.PluginDir = filepath.Join(r.RootDir,"plugin")
 
 }
 
