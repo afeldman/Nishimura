@@ -17,6 +17,8 @@ type NishimuraConfig struct {
 	RootDir string `yaml:"path"`
 	ConfFile string  `yaml:"file"`
 	Version string   `yaml:"version"`
+	TemplateDir string `yaml:"tample"`
+	PluginDir string `yaml:"plugin"`
 }
 
 var ncft NishimuraConfig
@@ -42,6 +44,10 @@ func (r *NishimuraConfig) initNishimura(nishimurapath string) {
 		r.ConfFile = file
 	}
 	r.Version = NISHIMURA_VERSION
+
+	r.TemplateDir = filepath.Join(r.RootDir,"template")
+	r.TemplateDir = filepath.Join(r.RootDir,"plugin")
+
 }
 
 func (r *NishimuraConfig) save() error{
