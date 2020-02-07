@@ -1,7 +1,8 @@
-package Nishimura
+package nishimura
 
 import (
 	"strings"
+
 	"github.com/afeldman/Makoto/kpc"
 )
 
@@ -35,7 +36,7 @@ func (this *Nishimura) To_KPC() *kpc.KPC {
 		Name:  this.Author,
 		Email: this.Email,
 	})
-	kpc_.Keywords = strings.Split(this.Keywords,",")
+	kpc_.Keywords = strings.Split(this.Keywords, ",")
 
 	return kpc_
 }

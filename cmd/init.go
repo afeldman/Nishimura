@@ -3,25 +3,26 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"io/ioutil"
 
-	kpc "github.com/afeldman/Makoto/kpc"
+	gakuten "github.com/afeldman/Gakutensoku/ktrans"
 	license "github.com/afeldman/Nishimura/licenses"
 	nishi "github.com/afeldman/Nishimura/nishimura"
-	gakuten "github.com/afeldman/Gakutensoku/ktrans"
+	kpc "github.com/afeldman/kpc"
 
-	"github.com/afeldman/go-util/string"
-	"github.com/afeldman/go-util/fs"
-	"github.com/afeldman/go-util/file"
+	fileinfo "github.com/afeldman/go-util/file"
+	filesystem "github.com/afeldman/go-util/fs"
+	str_util "github.com/afeldman/go-util/string"
 
+	"html/template"
+
+	time_util "github.com/afeldman/go-util/time"
 	"github.com/spf13/cobra"
 	"github.com/vigneshuvi/GoDateFormat"
-	"github.com/afeldman/go-util/time"
-	"html/template"
 )
 
 var (
@@ -81,10 +82,10 @@ func InitPackage() {
 		data.Email = console_input("author's email:", "")
 		data.License = console_input("license (MIT):", "MIT")
 
-		kpc_ = data.To_KPC();
+		kpc_ = data.To_KPC()
 		if kpc_err, kpc_data := kpc_.ToYAML(); kpc_err != nil {
 			log.Fatal(kpc_err)
-		}else {
+		} else {
 			fmt.Println("\n", string(kpc_data))
 		}
 
@@ -102,7 +103,7 @@ func InitPackage() {
 				}
 			}
 
-			if err := make_kpc(kpc_,data.Project_Name,dir_path); err != nil {
+			if err := make_kpc(kpc_, data.Project_Name, dir_path); err != nil {
 				log.Fatal(err)
 			}
 
@@ -123,7 +124,7 @@ func InitPackage() {
 	}
 }
 
-func make_compiler_conf(data *nishi.Nishimura, path string) error{
+func make_compiler_conf(data *nishi.Nishimura, path string) error {
 	compiler_info := gakuten.KtransInit()
 	compiler_info.Version = data.Parser_ver
 	compiler_info.Input = data.Mainfile
@@ -144,7 +145,7 @@ func make_compiler_conf(data *nishi.Nishimura, path string) error{
 	return nil
 }
 
-func make_kpc(kpc_ *kpc.KPC, target, path string) error{
+func make_kpc(kpc_ *kpc.KPC, target, path string) error {
 	tmpfile, err := ioutil.TempFile("", "nishimura-")
 	if err != nil {
 		return err
@@ -185,7 +186,7 @@ func copy_git(path string) error {
 	return nil
 }
 
-func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) error{
+func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) error {
 	authors := kpc_.Authors
 	lic, err := license.GetLicense(data.License,
 		*((authors[0]).GetEmail()),
@@ -236,7 +237,7 @@ func createProjectDirectory(project_name string) string {
 	return directoryPath
 }
 
-func build_start_file(data *nishi.Nishimura, path string) error{
+func build_start_file(data *nishi.Nishimura, path string) error {
 
 	type page_data struct {
 		FileName    string
@@ -252,13 +253,13 @@ func build_start_file(data *nishi.Nishimura, path string) error{
 	today := time_util.GetToday(GoDateFormat.ConvertFormat("dd-MMM-yyyy"))
 
 	page_ := page_data{
-		FileName: data.Mainfile,
-		SmallDesc: data.Description,
-		Desc: data.Description,
-		Copyright: data.License,
-		Author: data.Author,
-		Today: today,
-		License: data.License,
+		FileName:    data.Mainfile,
+		SmallDesc:   data.Description,
+		Desc:        data.Description,
+		Copyright:   data.License,
+		Author:      data.Author,
+		Today:       today,
+		License:     data.License,
 		Projectname: data.Project_Name,
 	}
 

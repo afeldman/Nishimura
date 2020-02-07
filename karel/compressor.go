@@ -2,15 +2,13 @@ package karel
 
 import (
 	"log"
-	"path/filepath"
 	"os"
+	"path/filepath"
 
 	"github.com/mholt/archiver"
 
-	kpc "github.com/afeldman/Makoto/kpc"
+	kpc "github.com/afeldman/kpc"
 )
-
-
 
 func BuildKarel(info kpc.KPC, folder string) {
 
@@ -27,7 +25,7 @@ func BuildKarel(info kpc.KPC, folder string) {
 	err = filepath.Walk(".",
 		func(path string, info os.FileInfo, err error) error {
 			//fmt.Println(path, info.Size())
-			files = append(files,path)
+			files = append(files, path)
 			return nil
 		})
 	if err != nil {
@@ -35,8 +33,8 @@ func BuildKarel(info kpc.KPC, folder string) {
 	}
 
 	for _, file := range files {
-        log.Println(file)
-    }
+		log.Println(file)
+	}
 
 	err = archiver.TarXZ.Make(name+"-"+version+".karel", files)
 	if err != nil {
