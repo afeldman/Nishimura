@@ -2,7 +2,8 @@ package Nishimura
 
 import (
 	"strings"
-	"github.com/afeldman/Makoto/kpc"
+
+	"github.com/afeldman/kpc"
 )
 
 type Nishimura struct {
@@ -19,23 +20,19 @@ type Nishimura struct {
 	License      string
 }
 
-func (this *Nishimura) To_KPC() *kpc.KPC {
+func (nishimura *Nishimura) To_KPC() *kpc.KPC {
 
-	kpc_ := kpc.KPC_Init(this.Project_Name)
+	kpc_ := kpc.InitKPC(nishimura.Project_Name)
 
-	kpc_.SetVersion(this.Version)
-	kpc_.SetDescription(this.Description)
-	kpc_.SetMainSourceFile(this.Mainfile)
+	kpc_.SetVersion(nishimura.Version)
+	kpc_.SetDescription(nishimura.Description)
+	kpc_.SetMainSourceFile(nishimura.Mainfile)
 
-	repo := kpc.Repo_Init()
-	repo.SetType(this.Repo_type)
-	repo.SetURL(this.Repo_add)
-	kpc_.AddRepo(*repo)
 	kpc_.AddAuthor(kpc.Author{
-		Name:  this.Author,
-		Email: this.Email,
+		Name:  nishimura.Author,
+		Email: nishimura.Email,
 	})
-	kpc_.Keywords = strings.Split(this.Keywords,",")
+	kpc_.Keywords = strings.Split(nishimura.Keywords, ",")
 
 	return kpc_
 }

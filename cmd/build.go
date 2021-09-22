@@ -3,25 +3,28 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"io/ioutil"
 
-	kpc "github.com/afeldman/Makoto/kpc"
+	cp "github.com/nmrshll/go-cp"
+
+	gakuten "github.com/afeldman/Gakutensoku/ktrans"
 	license "github.com/afeldman/Nishimura/licenses"
 	nishi "github.com/afeldman/Nishimura/nishimura"
-	gakuten "github.com/afeldman/Gakutensoku/ktrans"
+	kpc "github.com/afeldman/kpc"
 
-	"github.com/afeldman/go-util/string"
-	"github.com/afeldman/go-util/fs"
-	"github.com/afeldman/go-util/file"
+	fileinfo "github.com/afeldman/go-util/file"
+	filesystem "github.com/afeldman/go-util/fs"
+	str_util "github.com/afeldman/go-util/string"
 
+	"html/template"
+
+	time_util "github.com/afeldman/go-util/time"
 	"github.com/spf13/cobra"
 	"github.com/vigneshuvi/GoDateFormat"
-	"github.com/afeldman/go-util/time"
-	"html/template"
 )
 
 var (
@@ -65,7 +68,7 @@ func InitPackage() {
 
 	var data = &nishi.Nishimura{}
 
-	kpc_ := kpc.KPC_Init(data.Project_Name)
+	kpc_ := kpc.InitKPC(data.Project_Name)
 
 	for {
 		project_name := filepath.Base(getcurrentpathname())
@@ -74,18 +77,18 @@ func InitPackage() {
 		data.Description = console_input("package description:", "")
 		data.Mainfile = console_input("main file ("+data.Project_Name+".kl):", data.Project_Name+".kl")
 		data.Parser_ver = console_input("paser version (v9.10):", "v9.10")
-		data.Repo_type = console_input("repository type (git):", "git")
 		data.Repo_add = console_input("repository address:", "")
 		data.Keywords = console_input("package keywords:", "")
 		data.Author = console_input("author:", os.Getenv("USER"))
 		data.Email = console_input("author's email:", "")
 		data.License = console_input("license (MIT):", "MIT")
 
-		kpc_ = data.To_KPC();
-		if kpc_err, kpc_data := kpc_.ToYAML(); kpc_err != nil {
-			log.Fatal(kpc_err)
-		}else {
-			fmt.Println("\n", string(kpc_data))
+		kpc_ = data.To_KPC()
+		kpc_data := kpc_.To()
+		if kpc_data == nil {
+			log.Fatal("cannot create Data")
+		} else {
+			fmt.Println("\n", *kpc_data)
 		}
 
 		ok := console_input("OK (yes)?:", "no")
@@ -96,13 +99,7 @@ func InitPackage() {
 				log.Println(err)
 			}
 
-			if data.Repo_type == "git" {
-				if err := copy_git(dir_path); err != nil {
-					log.Println(err)
-				}
-			}
-
-			if err := make_kpc(kpc_,data.Project_Name,dir_path); err != nil {
+			if err := make_kpc(kpc_, dir_path); err != nil {
 				log.Fatal(err)
 			}
 
@@ -123,8 +120,8 @@ func InitPackage() {
 	}
 }
 
-func make_compiler_conf(data *nishi.Nishimura, path string) error{
-	compiler_info := gakuten.KtransInit()
+func make_compiler_conf(data *nishi.Nishimura, path string) error {
+	compiler_info := gakuten.Init()
 	compiler_info.Version = data.Parser_ver
 	compiler_info.Input = data.Mainfile
 
@@ -144,24 +141,24 @@ func make_compiler_conf(data *nishi.Nishimura, path string) error{
 	return nil
 }
 
-func make_kpc(kpc_ *kpc.KPC, target, path string) error{
+func make_kpc(kpc_ *kpc.KPC, path string) error {
 	tmpfile, err := ioutil.TempFile("", "nishimura-")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	kpc_err, outputdata := kpc_.ToJSON()
-	if kpc_err != nil {
-		return kpc_err
+	outputdata := kpc_.To()
+	if outputdata == nil {
+		return fmt.Errorf("cannot Build kpc")
 	}
 
-	if _, err := tmpfile.WriteString(string(outputdata)); err != nil {
+	if _, err := tmpfile.WriteString(string(*outputdata)); err != nil {
 		return err
 	}
 	tmpfile.Sync()
 
-	if err := fileinfo.Fcopy(tmpfile.Name(), filepath.Join(path, target+".kpc")); err != nil {
+	if err := fileinfo.Fcopy(tmpfile.Name(), filepath.Join(path, kpc_.Name+".kpc")); err != nil {
 		return err
 	}
 	if err := tmpfile.Close(); err != nil {
@@ -171,21 +168,7 @@ func make_kpc(kpc_ *kpc.KPC, target, path string) error{
 	return nil
 }
 
-func copy_git(path string) error {
-	nishimura_home_template := filepath.Join(ncft.RootDir, "template")
-
-	if err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitignore"),
-		filepath.Join(path, ".gitignore")); err != nil {
-		return err
-	}
-	if err := fileinfo.Fcopy(filepath.Join(nishimura_home_template, "Karel.gitattribute"),
-		filepath.Join(path, ".gitattribute")); err != nil {
-		return err
-	}
-	return nil
-}
-
-func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) error{
+func makeLicense(kpc_ *kpc.KPC, data *nishi.Nishimura, path string) error {
 	authors := kpc_.Authors
 	lic, err := license.GetLicense(data.License,
 		*((authors[0]).GetEmail()),
@@ -236,7 +219,7 @@ func createProjectDirectory(project_name string) string {
 	return directoryPath
 }
 
-func build_start_file(data *nishi.Nishimura, path string) error{
+func build_start_file(data *nishi.Nishimura, path string) error {
 
 	type page_data struct {
 		FileName    string
@@ -252,13 +235,13 @@ func build_start_file(data *nishi.Nishimura, path string) error{
 	today := time_util.GetToday(GoDateFormat.ConvertFormat("dd-MMM-yyyy"))
 
 	page_ := page_data{
-		FileName: data.Mainfile,
-		SmallDesc: data.Description,
-		Desc: data.Description,
-		Copyright: data.License,
-		Author: data.Author,
-		Today: today,
-		License: data.License,
+		FileName:    data.Mainfile,
+		SmallDesc:   data.Description,
+		Desc:        data.Description,
+		Copyright:   data.License,
+		Author:      data.Author,
+		Today:       today,
+		License:     data.License,
 		Projectname: data.Project_Name,
 	}
 
@@ -275,6 +258,19 @@ func build_start_file(data *nishi.Nishimura, path string) error{
 	defer file.Close()
 
 	tmpl.Execute(file, page_)
+
+	git_ignore_path := filepath.Join(ncft.RootDir, "template", "Karel.gitignore")
+	git_attribute_path := filepath.Join(ncft.RootDir, "template", "Karel.gitattribute")
+
+	err = cp.CopyFile(git_ignore_path, filepath.Join(path, ".gitignore"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = cp.CopyFile(git_attribute_path, filepath.Join(path, ".gitattribute"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return nil
 }
