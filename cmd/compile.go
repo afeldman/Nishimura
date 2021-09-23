@@ -6,7 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 
+	"github.com/afeldman/Nishimura/karel"
+	kpc "github.com/afeldman/kpc"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +24,6 @@ AUTHOR:
 	Anton Feldmann <anton.feldmann@gmail.com>
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			var kpc_file string
 			var path string
 			if len(args) == 0 {
 				p, err := os.Getwd()
@@ -41,12 +43,29 @@ AUTHOR:
 			files := checkExt(path, ".kpc")
 
 			if len(files) == 0 {
-				log.Fatalln("no kpc files")
+				log.Fatalln("use etleased one kpc file in your path")
 			}
 
+			wg := &sync.WaitGroup{}
+			wg.Add(len(files))
+
 			// found kpc
-			kpc_file = files[0]
-			fmt.Println(kpc_file)
+			for _, kpc_file := range files {
+				go func(wg *sync.WaitGroup, kpc_file string) {
+					defer wg.Done()
+
+					project_path := filepath.Dir(kpc_file)
+					fmt.Println(project_path)
+					//read kpc
+					kpc_data := kpc.ReadKPCFile(kpc_file)
+
+					karel.BuildKarel(kpc_data, project_path)
+				}(wg, kpc_file)
+
+			}
+
+			wg.Wait()
+
 		},
 	}
 )
@@ -57,7 +76,7 @@ func checkExt(path, ext string) []string {
 		if !f.IsDir() {
 			r, err := regexp.MatchString(ext, f.Name())
 			if err == nil && r {
-				files = append(files, f.Name())
+				files = append(files, path)
 			}
 		}
 		return nil
