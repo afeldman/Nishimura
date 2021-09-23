@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,6 +32,7 @@ func init() {
 
 	Nishimura.AddCommand(version)
 	Nishimura.AddCommand(build)
+	Nishimura.AddCommand(compile)
 }
 
 func Execute() {
@@ -40,7 +42,7 @@ func Execute() {
 
 }
 
-func initConfig(){
+func initConfig() {
 	ncft.initNishimura(confFile)
 	ncft.build_file()
 
