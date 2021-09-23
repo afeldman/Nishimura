@@ -10,9 +10,11 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/mholt/archiver v3.1.1+incompatible // indirect
 	github.com/mholt/archiver/v3 v3.5.0
 	github.com/nmrshll/go-cp v0.0.0-20180115193924-61436d3b7cfa // indirect
 	github.com/nwaples/rardecode v1.1.2 // indirect
+	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	github.com/ulikunitz/xz v0.5.10 // indirect
