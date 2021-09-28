@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mholt/archiver"
+	log "github.com/sirupsen/logrus"
 
 	kpc "github.com/afeldman/kpc"
 )
@@ -32,6 +33,9 @@ func BuildKarel(info *kpc.KPC, folder string) string {
 
 func OpenKarel(name, folder string) {
 	name_without_ext := strings.TrimSuffix(name, filepath.Ext(name))
+
+	log.Info(name_without_ext)
+
 	err := os.Rename(name_without_ext+".karel", name_without_ext+".tar.sz")
 	if err != nil {
 		panic(err)
