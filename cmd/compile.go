@@ -8,7 +8,9 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/afeldman/Gakutensoku/upload"
 	"github.com/afeldman/Nishimura/karel"
+	"github.com/afeldman/go-util/env"
 	kpc "github.com/afeldman/kpc"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +26,8 @@ AUTHOR:
 	Anton Feldmann <anton.feldmann@gmail.com>
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			gakutensoku_url := env.GetEnvOrDefault("GAKUTENSOKU_URL", "http://localhost:2510")
+
 			var path string
 			if len(args) == 0 {
 				p, err := os.Getwd()
@@ -59,7 +63,13 @@ AUTHOR:
 					//read kpc
 					kpc_data := kpc.ReadKPCFile(kpc_file)
 
-					karel.BuildKarel(kpc_data, project_path)
+					filepath := karel.BuildKarel(kpc_data, project_path)
+
+					// send file to gakutensoku
+					client := upload.NewClient(gakutensoku_url, filepath)
+					upload.SendData(client)
+
+					// delete karelfile
 				}(wg, kpc_file)
 
 			}

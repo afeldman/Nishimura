@@ -2,13 +2,15 @@ package karel
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archiver"
 
 	kpc "github.com/afeldman/kpc"
 )
 
-func BuildKarel(info *kpc.KPC, folder string) {
+func BuildKarel(info *kpc.KPC, folder string) string {
 	name := *(info.GetName())
 	version := *(info.GetVersion())
 
@@ -16,19 +18,26 @@ func BuildKarel(info *kpc.KPC, folder string) {
 	if err != nil {
 		panic(err)
 	}
-	err = os.Rename(name+".tar.sz", name+"@"+version+".karel")
+
+	package_name := name + "@" + version + ".karel"
+
+	err = os.Rename(name+".tar.sz", package_name)
 	if err != nil {
 		panic(err)
 	}
+
+	return package_name
+
 }
 
 func OpenKarel(name, folder string) {
-	err := os.Rename(name+".karel", name+".tar.sz")
+	name_without_ext := strings.TrimSuffix(name, filepath.Ext(name))
+	err := os.Rename(name_without_ext+".karel", name_without_ext+".tar.sz")
 	if err != nil {
 		panic(err)
 	}
 
-	err = archiver.Unarchive(name+".tar.sz", folder)
+	err = archiver.Unarchive(name_without_ext+".tar.sz", folder)
 	if err != nil {
 		panic(err)
 	}
