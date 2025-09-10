@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const NISHIMURA_VERSION = "0.2.0"
+const NISHIMURA_VERSION = "0.2.1"
 
 var version = &cobra.Command{
 	Use:   "version",
@@ -28,5 +28,5 @@ func GetVersion() string {
 }
 
 func init() {
-	Nishimura.AddCommand(version)
+	rootCmd.AddCommand(version)
 }
