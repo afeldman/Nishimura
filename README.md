@@ -1,149 +1,138 @@
 # Nishimura
-Nishimura is a Karel package manager. The project is named after *Makoto Nishimura* the engineer of the first Japanese robot.
 
-## Setup
+Nishimura is a package manager for FANUC Karel projects.
+It is named after Makoto Nishimura, the engineer of the first Japanese robot Gakutensoku (1928).
 
-Nishimura can interact with different other projects. Therefore the projects will search for different environment setting.
+With Nishimura you can:
 
-Nishimura uses a Installation repository:
+- Manage project manifests (nishimura.kpc)
+- Add, install and resolve dependencies
+- Check for conflicts
+- Compile Karel code via the Gakutensoku ktrans wrapper
+- Inspect your dependency graph
 
-```bash
-export NISHIMURA_HOME=/usr/local/lib/karel/
+## 📦 Installation
+```go
+go install github.com/afeldman/Nishimura@latest
 ```
 
-### Gakutensoku
-If the user want to use a global karel compiler, because he uses LINUX or Mac, then the package can send to the **Gakutensoku** server. To set the **Gakutensoku** server connection use
+Make sure nishimura is available in your $PATH.
 
+---
+
+## ⚙️ Environment
+
+Nishimura interacts with several tools and needs some environment variables:
+
+### Nishimura Home
+
+Global source cache and build artifacts:
 ```bash
-export GAKUTENSOKU_HOME=127.0.0.1:1234
+export NISHIMURA_HOME=$HOME/.nishimura
 ```
-All information on **Gakutensoku** will be available in the projekt description.
 
 ### Makoto
-Makoto is a project to make a Karel package configuration description. This file will contain all information of the project. All packages informationes files for Karel are stored into a global dictionary. The path has to be set, if a user want to use dependencies or install the local libray.
 
+Makoto provides the package configuration database (KPC).
 ```bash
-export KPC_HOME=/usr/local/lib/karel/kpc
+export KPC_HOME=$HOME/.makoto
 ```
 
-The KPC-System only runs on **.karel** files, the project files.
+### Gakutensoku (Compiler Wrapper)
 
-### Hoffmann
-Hoffmann is a package server. This server makes it possible to share libraies. To set the local configuration for the server a configuration will is utilized. The home can set to a path. this example is the default path if no path is set.
+To use the Karel compiler via wrapper, ensure ktrans.exe is available in your $PATH.
+No server is required – Nishimura calls the local wrapper directly.
 
-```bash
-export HOFFMANN_HOME=/etc/hoffmann
-```
+## 🚀 Quick Start
+1. Create a new project
+    ```bash
+    mkdir hello_karel && cd hello_karel
+    nishimura init
+    ```
+    This generates a nishimura.kpc:
+    ```toml
+    kpc_version = "0.2.0"
+    name = "hello_karel"
+    version = "0.1.0"
+    description = "A hello world project in FANUC Karel"
+    main = "main.kl"
 
-The Hoffmann setting is stored into a setting.yaml
+    [[authors]]
+    name = "Your Name"
+    email = "you@example.com"
+    ```
 
-```yaml
+2. Write your program
+    main.kl:
+    ```pascal
+    PROGRAM hello
+    BEGIN
+        WRITE('Hello, Karel World!',CR)
+    END hello
+    ```
+
+3. Add a dependency
+    ```bash
+    nishimura add motion_lib@1.2.0 https://github.com/yourname/motion_lib.git
+    ```
+
+    Dependencies are cloned into ~/.nishimura/src/ and added to your manifest.
+
+4. Install dependencies
+    ```bash
+        nishimura install
+    ```
+
+    - Clones/fetches all deps
+    - Registers them in the Makoto DB
+
+5. Show dependency graph
+    ```bash
+    nishimura graph
+    ```
+
+    Example:
+    ```graphql
+    - hello_karel@0.1.0
+        - motion_lib@1.2.0
+            - utils@0.3.1
+    ```
+
+6. Compile project
+    ```bash
+    nishimura compile
+    ```
+
+    - Collects include paths from dependencies
+    - Runs the Gakutensoku ktrans wrapper
+    - Outputs to build/:
+        ```bash
+        build/hello.pc
+        ```
+
+7. Manage conflicts
+
+    Mark incompatible versions:
+    ```bash
+    nishimura conflict add motion_lib@1.0.0
+    nishimura conflict check
+    ```
 ---
-servers:
-    - 127.0.0.1:123
-    - 192.1.2.3:143
-```
+## 🔑 Commands Overview
+|Command|	Description|
+|-------|--------------|
+|init|	Initialize a new project (nishimura.kpc)|
+|add	|Add a dependency (name@version url)|
+|install|	Install all dependencies into cache + DB|
+|graph|	Print dependency graph|
+|compile|	Compile project with ktrans|
+|conflict|	Manage conflict rules (add, rm, list, check)|
 
+---
 
-## Commands
+## 🛠️ Roadmap
 
-The project utilizes different methods to provide an easy work with Karel projects
-
-|Command|Description|
-|-------|-----------|
-|build| build the project package. A package uses the mime **.karel**|
-|install|install the project package|
-|push| push data to the package server|
-|pull| pull and install a package|
-|get| pull to local project. not install|
-|init| build a new project using a project skell|
-|deploy| deploy the package to the roboter|
-|compile| compile the current package and copy the result into the bin/ folder.|
-|delete| delete a package from the local folder|
-
-### init
-
-```bash
-Nishimura init
-```
-
-The init command will ask the user question to setup the project. A default skell is set so the programmer can start writing all the information
-
-```bash
-1. package name (foldername):
-2. package version (0.1.0):
-3. package description:
-4. main file (packagename.kl):
-5. paser version (v9.10):
-6. repo type (git):
-7. repo address:
-8. package keywords:
-9. author: foo; bar
-10. license (MIT):
-...
-11. OK (yes)?:
-```
-
-This question build the kpc file and the compiler file.
-The kpc file contains all information on the project. The compiler file will contains all compiler information.
-the compiler file is only for this project and will not used in the child project. The child project needs a differnent compiler file.
-
-### build
-
-```bash
-Nishimura build <package_path>
-```
-To build a **.karel** package for the package system this method build a package system. This method does not compile the code. It only checks for the **kpc** file and build the package. The naming is easy *PackageName-version.karel*.
-
-## install
-
-```bash
-Nishimura install (--local) [name<@version>]
-```
-
-If no name and version is given, then the current project is used to install. To install a project different steps are utilized:
-
-1. build the package
-2. send the package to the compiler or use the local installation
-3. If the compile process was successfull, then install the package, otherwise break the installation process and give back the error message
-4. install the package to a local diectory (./vendor) or global in *NISHIMURA_HOME* folder
-
-If a name is given for this project, then in the first step is the local *NISHIMURA_HOME* folder checked and if the project is not available on the local computer, then the package server **Hoffmann** is utilized.
-If a version is set, then the system trys to install the requested version. Otherwise the system allways install the latest version.
-
-### push
-```bash
-Nishimura push
-```
-
-This function only starts if **Hoffmann** as package server is available and only if the code is compilable. Then the package is build, compuled and send to the server.
-
-### pull
-```bash
-Nishimura pull name<@version>
-```
-
-This command is an alias to download a requested package. If the package is available, then the package is installed into the *NISHIMURA_HOME* global folder.
-
-### deploy
-```bash
-Nishimura deploy robot_ip <device>
-```
-
-This command will copy all data in the *bin* folder. The compile process creates the *bin* folder. The default folder on the robot is **MD:\**.
-
-### compile
-
-```bash
-Nishimura compile <--gakutensoku> <--test>
-```
-
-This command starts the compile process. Because I use mostly Linux, the **Gakutensoku** server is mandatory. This method handed the package to the **KTrans Wrapper** project and builds the package. The test option will delete the bin folder after a successfull build.
-
-### delete
-
-```bash
-Nishimura delete name<@version>
-```
-
-delete the kpc file and the corresponding package in the *NISHIMURA_HOME*
+- Hoffmann integration as package server
+- Deployment helper (deploy) for robots
+- Smarter conflict resolution strategies
+- Precompiled package cache
