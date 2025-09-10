@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const NISHIMURA_VERSION = "0.2.1"
+const NISHIMURA_VERSION = "0.2.2"
 
 var version = &cobra.Command{
 	Use:   "version",
