@@ -8,51 +8,52 @@ import (
 )
 
 var (
-	Nishimura = &cobra.Command{
-		Use:   "Nishimura",
-		Short: "Nishimura is a FANUC Karel package configurator",
-		Long: `
-	   	  Nishimura Karel package manager
-	   	  ===============================
-Nishimura is a Karel package manager. The idea is that a Karel program
-can put in an all containing package. This makes it more flexible to write
-Karel Code and share the code with other users.
-AUTHOR:
-	Anton Feldmann <anton.feldmann@gmail.com>
-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\`,
-	}
+	confFile   string
+	configRoot *NishimuraConfig
 
-	confFile string
+	Nishimura = &cobra.Command{
+		Use:   "nishimura",
+		Short: "Nishimura is a FANUC Karel package manager",
+		Long: `
+Nishimura Karel package manager
+===============================
+
+Nishimura is a Karel package manager. The idea is that a Karel program
+can be bundled in a self-contained package. This makes it easier to write,
+share and reuse Karel code.
+
+AUTHOR:
+  Anton Feldmann <anton.feldmann@gmail.com>
+`,
+	}
 )
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	Nishimura.PersistentFlags().StringVar(&confFile, "config", DefaultConfPath(), "the config file to set the Path.")
-
-	Nishimura.AddCommand(version)
-	Nishimura.AddCommand(build)
-	Nishimura.AddCommand(compile)
+	Nishimura.PersistentFlags().StringVar(
+		&confFile,
+		"config",
+		DefaultConfPath(),
+		"path to config file (default: ~/.nishimura/config.toml)",
+	)
 }
 
 func Execute() {
 	if err := Nishimura.Execute(); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func initConfig() {
-	ncft.initNishimura(confFile)
-	ncft.build_file()
+	// Initialisiere globale Config
+	configRoot = InitNishimura(confFile)
 
 	if confFile != "" {
-		// Use config file from the flag.
 		viper.SetConfigFile(confFile)
 	} else {
-
-		viper.AddConfigPath(ncft.RootDir)
-		viper.SetConfigName(ncft.ConfFile)
+		viper.AddConfigPath(configRoot.RootDir)
+		viper.SetConfigName("nishimura") // ohne Suffix
 	}
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv()
 }
